@@ -7,13 +7,34 @@ import android.content.Context
 import android.content.Intent
 import android.location.Location
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingEvent
 
 class LocationReceiver : BroadcastReceiver() {
 
-
     override fun onReceive(context: Context?, intent: Intent?) {
+        Log.d(TAG, "WE ARE IN RECEIVER")
+        val geofencingEvent = GeofencingEvent.fromIntent(intent)
+        if (geofencingEvent.hasError()) {
+            Log.d(TAG, "Event has error")
+            return
+        }
 
+        val geofenceTransition = geofencingEvent.geofenceTransition
+
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
+            val location = geofencingEvent.triggeringLocation
+            context?.let {
+                createNotificationChannel(it, LOCATION_CHANNEL)
+
+                with(NotificationManagerCompat.from(it)) {
+                    notify(LOCATION_ID, createLocationNotification(it, location, LOCATION_CHANNEL))
+                }
+            }
+        }
     }
 
     private fun createLocationNotification(context:Context, location: Location, channelId: String) =

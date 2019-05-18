@@ -1,13 +1,11 @@
 package com.epam.geolocationapp
 
 import android.annotation.SuppressLint
-import android.app.IntentService
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
+import android.app.*
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.core.app.NotificationCompat
@@ -15,8 +13,9 @@ import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
+import java.lang.Exception
 
-class GeofenceService : IntentService(SERVICE_NAME) {
+class GeofenceService : Service() {
 
     private lateinit var geofencingClient: GeofencingClient
     private val pendingIntent by lazy {
@@ -34,17 +33,29 @@ class GeofenceService : IntentService(SERVICE_NAME) {
         )
     }
 
-    override fun onHandleIntent(intent: Intent?) {
-        when(intent?.action) {
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        Log.d(TAG, intent?.action?.toString())
+        when (intent?.action) {
             ADD_ACTION -> {
                 val latitude = intent.getDoubleExtra(LATITUDE_EXTRA, .0)
                 val longitude = intent.getDoubleExtra(LONGITUDE_EXTRA, .0)
                 addGeofence(latitude, longitude)
             }
             REMOVE_ACTION -> {
-
+                geofencingClient.removeGeofences(pendingIntent).run {
+                    addOnSuccessListener {
+                        initOnSuccessListener(getString(R.string.remove_success))
+                    }
+                    addOnFailureListener {
+                        initOnFailureListener(getString(R.string.remove_error), it)
+                    }
+                    stopSelf()
+                }
             }
         }
+        return super.onStartCommand(intent, flags, startId)
     }
 
     @SuppressLint("MissingPermission")
@@ -59,14 +70,22 @@ class GeofenceService : IntentService(SERVICE_NAME) {
         )
         geofencingClient.addGeofences(request, pendingIntent).run {
             addOnSuccessListener {
-                Log.d(TAG, "SUCCESS")
-                Toast.makeText(applicationContext, getString(R.string.point_success), Toast.LENGTH_SHORT).show()
+                initOnSuccessListener(getString(R.string.point_success))
             }
             addOnFailureListener {
-                Log.d(TAG, "FAILING with $it")
-                Toast.makeText(applicationContext, getString(R.string.point_failure), Toast.LENGTH_SHORT).show()
+                initOnFailureListener(getString(R.string.point_failure), it)
             }
         }
+    }
+
+    private fun initOnSuccessListener(message: String) {
+        Log.d(TAG, "SUCCESS")
+        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun initOnFailureListener(message: String, exception: Exception) {
+        Log.e(TAG, "FAILING with $exception")
+        Toast.makeText(applicationContext, getString(R.string.point_failure), Toast.LENGTH_SHORT).show()
     }
 
     private fun buildGeofence(
@@ -88,32 +107,21 @@ class GeofenceService : IntentService(SERVICE_NAME) {
         }.build()
     }
 
-//    fun t() {
-//        val geofencingEvent = GeofencingEvent.fromIntent(intent)
-//        if (geofencingEvent.hasError()) {
-//            Log.e(TAG, "ERROR OCCURRED. CODE: ${geofencingEvent.errorCode}")
-//            return
-//        }
-//
-//        val geofenceTransition = geofencingEvent.geofenceTransition
-//        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
-//
-//            val location = geofencingEvent.triggeringLocation
-//
-//            createNotificationChannel(LOCATION_CHANNEL)
-//            with(NotificationManagerCompat.from(this)) {
-//                notify(LOCATION_ID, createLocationNotification(location))
-//            }
-//        }
-//    }
-
-    private fun createForegroundNotification(title: String, content: String, channelId: String) =
-        NotificationCompat.Builder(this, channelId).apply {
+    private fun createForegroundNotification(
+        title: String,
+        content: String,
+        channelId: String
+    ): Notification {
+        val intent = Intent(this, MainActivity::class.java)
+        val pIntent = PendingIntent.getActivity(this, 3, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+        return NotificationCompat.Builder(this, channelId).apply {
             setContentTitle(title)
             setContentText(content)
+            addAction(R.drawable.ic_location_on_black_24dp, getString(R.string.to_the_app_reply), pIntent)
             setSmallIcon(R.drawable.ic_location_on_black_24dp)
             priority = NotificationCompat.PRIORITY_DEFAULT
         }.build()
+    }
 
 
     private fun createNotificationChannel(channelId: String) {
@@ -131,7 +139,7 @@ class GeofenceService : IntentService(SERVICE_NAME) {
 
     private companion object {
         private const val TAG = "GEOFENCE SERVICE"
-        private const val SERVICE_NAME = " GEOFENCE_ENTER_SERVICE"
+
 
         private const val FOREGROUND_CHANNEL = "FOREGROUND_CHANNEL"
         private const val FOREGROUND_ID = 2

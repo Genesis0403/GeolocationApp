@@ -9,4 +9,7 @@
     <string name="channel_name">Location Channel</string>
     <string name="channel_description">Location Channel</string>
     <string name="notification_title">Location App</string>
+    <string name="remove_error"><![CDATA[Error occurred during removing ->]]></string>
+    <string name="remove_success">Point removed!</string>
+    <string name="to_the_app_reply">To the App</string>
 </resources>
