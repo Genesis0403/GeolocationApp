@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:gravity="center_vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:id="@+id/locationFragment"
+>
+    <TextView
+            android:id="@+id/latitudeText"
+            android:text="@string/latitude"
+            android:textSize="24sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+    />
+
+    <EditText
+            android:layout_marginTop="8dp"
+            android:id="@+id/latitudeEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:hint="@string/edittext_placeholder"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+    />
+    <TextView
+            android:id="@+id/longitudeText"
+            android:text="@string/longitude"
+            android:textSize="24sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+    />
+
+    <EditText
+            android:id="@+id/longitudeEditText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:inputType="text"
+            android:hint="@string/edittext_placeholder"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+    />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/confirmButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:backgroundTint="@color/colorAccent"
+            android:src="@drawable/ic_check_black_24dp"
+            android:layout_marginTop="8dp"
+    />
+</LinearLayout>

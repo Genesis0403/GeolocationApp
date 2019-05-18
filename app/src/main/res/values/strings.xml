@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">GeolocationApp</string>
+    <string name="latitude">Latitude:</string>
+    <string name="longitude">Longitude:</string>
+    <string name="edittext_placeholder">Example: 66.33</string>
+    <string name="location_input_warning">Input latitude and longitude.</string>
+    <string name="point_success">Point was added.</string>
+    <string name="point_failure">A error occurred when adding point.</string>
+    <string name="channel_name">Location Channel</string>
+    <string name="channel_description">Location Channel</string>
+    <string name="notification_title">Location App</string>
 </resources>
