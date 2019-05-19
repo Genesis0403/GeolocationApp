@@ -38,7 +38,8 @@ class GeofenceService : IntentService(TAG) {
             ADD_ACTION -> {
                 val latitude = intent.getDoubleExtra(LATITUDE_EXTRA, .0)
                 val longitude = intent.getDoubleExtra(LONGITUDE_EXTRA, .0)
-                addGeofence(latitude, longitude)
+                val radius = intent.getDoubleExtra(RADIUS_EXTRA, .0)
+                addGeofence(latitude, longitude, radius.toFloat())
             }
             REMOVE_ACTION -> {
                 geofencingClient.removeGeofences(pendingIntent).run {
@@ -54,13 +55,13 @@ class GeofenceService : IntentService(TAG) {
     }
 
     @SuppressLint("MissingPermission")
-    private fun addGeofence(latitude: Double, longitude: Double) {
+    private fun addGeofence(latitude: Double, longitude: Double, radius: Float) {
         val request = getGeofenceRequest(
             buildGeofence(
                 TEMP_ID,
                 latitude,
                 longitude,
-                GEOFENCE_RADIUS
+                radius
             )
         )
         geofencingClient.addGeofences(request, pendingIntent).run {
@@ -79,7 +80,7 @@ class GeofenceService : IntentService(TAG) {
     }
 
     private fun initOnFailureListener(message: String, exception: Exception) {
-        Log.e(TAG, "FAILING with $exception")
+        Log.e(TAG, "$message $exception")
         Toast.makeText(applicationContext, getString(R.string.point_failure), Toast.LENGTH_SHORT).show()
     }
 
@@ -108,11 +109,11 @@ class GeofenceService : IntentService(TAG) {
         private const val FIVE_MINUTES_IN_MILLIS = 300000
 
         private const val TEMP_ID = "TEST_GEOFENCE"
-        private const val GEOFENCE_RADIUS = 100f
 
         private const val PENDING_REQUEST_CODE = 0
         private const val LATITUDE_EXTRA = "LATITUDE_EXTRA"
         private const val LONGITUDE_EXTRA = "LONGITUDE_EXTRA"
+        private const val RADIUS_EXTRA = "RADIUS_EXTRA"
 
         private const val ADD_ACTION = "ADD_ACTION"
         private const val REMOVE_ACTION = "REMOVE_ACTION"

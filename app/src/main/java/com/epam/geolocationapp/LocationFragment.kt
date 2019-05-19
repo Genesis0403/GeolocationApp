@@ -10,11 +10,13 @@ import android.widget.EditText
 import androidx.fragment.app.Fragment
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 /**
- * Fragment which responsible for input of latitude and longitude
- * and starts [GeofenceService] when user setting a point.
+ * Fragment which responsible for input of latitude and longitude,
+ * starts [GeofenceService] when user setting a point and show it on map.
  *
  * @see GeofenceService
  *
@@ -24,10 +26,12 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 class LocationFragment : Fragment() {
 
     private lateinit var geofencingClient: GeofencingClient
+    private lateinit var locationListener: OnLocationListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         geofencingClient = LocationServices.getGeofencingClient(context!!)
+        locationListener = context as OnLocationListener
     }
 
     override fun onCreateView(
@@ -37,13 +41,18 @@ class LocationFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.location_fragment, container, false)
 
-        view.findViewById<EditText>(R.id.latitudeEditText).setText("53.863591") //TODO delete setText
-        view.findViewById<EditText>(R.id.longitudeEditText).setText("27.476595")
+        view.findViewById<EditText>(R.id.latitudeEditText)
+        view.findViewById<EditText>(R.id.longitudeEditText)
 
         val confirmFab = view.findViewById<FloatingActionButton>(R.id.confirmButton)
         confirmFab.setOnClickListener {
             Log.d(TAG, "CONFIRMING")
-            initAcceptClickListener(view)
+            val latitudeEdit = view.findViewById<EditText>(R.id.latitudeEditText)
+            val longitudeEdit = view.findViewById<EditText>(R.id.longitudeEditText)
+            val latitude = latitudeEdit.text.toString().toDouble()
+            val longitude = longitudeEdit.text.toString().toDouble()
+
+            initAcceptClickListener(latitude, longitude, GEOFENCE_RADIUS.toDouble())
         }
 
         val cancelFab = view.findViewById<FloatingActionButton>(R.id.cancelButton)
@@ -54,31 +63,41 @@ class LocationFragment : Fragment() {
         return view
     }
 
-    private fun initAcceptClickListener(view: View) {
-        val latitudeEdit = view.findViewById<EditText>(R.id.latitudeEditText)
-        val longitudeEdit = view.findViewById<EditText>(R.id.longitudeEditText)
+    private fun initAcceptClickListener(latitude: Double, longitude: Double, radius: Double) {
+        locationListener.onInsert(latitude, longitude, radius)
 
         val intent = Intent(context, GeofenceService::class.java).apply {
-            putExtra(LATITUDE_EXTRA, latitudeEdit.text.toString().toDouble())
-            putExtra(LONGITUDE_EXTRA, longitudeEdit.text.toString().toDouble())
+            putExtra(LATITUDE_EXTRA, latitude)
+            putExtra(LONGITUDE_EXTRA, longitude)
+            putExtra(RADIUS_EXTRA, radius)
             action = ADD_ACTION
         }
         context?.startService(intent)
     }
 
     private fun initCancelClickListener() {
+        locationListener.onDelete()
+
         val intent = Intent(context, GeofenceService::class.java).apply {
             action = REMOVE_ACTION
         }
         context?.startService(intent)
     }
 
+    interface OnLocationListener {
+        fun onInsert(latitude: Double, longitude: Double, radius: Double)
+        fun onDelete()
+    }
+
     companion object {
         private const val TAG = "LOCATION FRAGMENT"
         private const val LATITUDE_EXTRA = "LATITUDE_EXTRA"
         private const val LONGITUDE_EXTRA = "LONGITUDE_EXTRA"
+        private const val RADIUS_EXTRA = "RADIUS_EXTRA"
         private const val ADD_ACTION = "ADD_ACTION"
         private const val REMOVE_ACTION = "REMOVE_ACTION"
+
+        private const val GEOFENCE_RADIUS = 100f
 
         fun newInstance() = LocationFragment()
     }
