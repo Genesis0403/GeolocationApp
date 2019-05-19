@@ -13,6 +13,15 @@ import androidx.core.app.NotificationManagerCompat
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingEvent
 
+/**
+ * Receiver which gets intents from [GeofenceService]
+ * when user reaches a certain point.
+ *
+ * @see GeofenceService
+ *
+ * @author Vlad Korotkevich
+ */
+
 class LocationReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context?, intent: Intent?) {
@@ -42,6 +51,7 @@ class LocationReceiver : BroadcastReceiver() {
             setContentTitle(context.getString(R.string.notification_title))
             setContentText("You've reached ${location.latitude} ${location.longitude}")
             setSmallIcon(R.drawable.ic_location_on_black_24dp)
+            setCategory(NotificationCompat.CATEGORY_ALARM)
             priority = NotificationCompat.PRIORITY_DEFAULT
         }.build()
 

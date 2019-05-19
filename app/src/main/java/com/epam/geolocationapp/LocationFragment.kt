@@ -1,8 +1,6 @@
 package com.epam.geolocationapp
 
 import android.content.Intent
-import android.location.Location
-import android.location.LocationManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,6 +11,15 @@ import androidx.fragment.app.Fragment
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+
+/**
+ * Fragment which responsible for input of latitude and longitude
+ * and starts [GeofenceService] when user setting a point.
+ *
+ * @see GeofenceService
+ *
+ * @author Vlad Korotkevich
+ */
 
 class LocationFragment : Fragment() {
 
@@ -30,7 +37,7 @@ class LocationFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.location_fragment, container, false)
 
-        view.findViewById<EditText>(R.id.latitudeEditText).setText("53.863591")
+        view.findViewById<EditText>(R.id.latitudeEditText).setText("53.863591") //TODO delete setText
         view.findViewById<EditText>(R.id.longitudeEditText).setText("27.476595")
 
         val confirmFab = view.findViewById<FloatingActionButton>(R.id.confirmButton)

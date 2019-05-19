@@ -1,21 +1,25 @@
 package com.epam.geolocationapp
 
 import android.annotation.SuppressLint
-import android.app.*
-import android.content.Context
+import android.app.IntentService
+import android.app.PendingIntent
 import android.content.Intent
-import android.os.Build
-import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
-import androidx.core.app.NotificationCompat
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
 import com.google.android.gms.location.LocationServices
-import java.lang.Exception
 
-class GeofenceService : Service() {
+/**
+ * IntentService which responsible for creation of geofence.
+ *
+ * @see LocationReceiver
+ *
+ * @author Vlad Korotkevich
+ */
+
+class GeofenceService : IntentService(TAG) {
 
     private lateinit var geofencingClient: GeofencingClient
     private val pendingIntent by lazy {
@@ -26,16 +30,9 @@ class GeofenceService : Service() {
     override fun onCreate() {
         super.onCreate()
         geofencingClient = LocationServices.getGeofencingClient(this)
-        createNotificationChannel(FOREGROUND_CHANNEL)
-        startForeground(
-            FOREGROUND_ID,
-            createForegroundNotification("Location App", "Working in background...", FOREGROUND_CHANNEL)
-        )
     }
 
-    override fun onBind(intent: Intent?): IBinder? = null
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+    override fun onHandleIntent(intent: Intent?) {
         Log.d(TAG, intent?.action?.toString())
         when (intent?.action) {
             ADD_ACTION -> {
@@ -51,11 +48,9 @@ class GeofenceService : Service() {
                     addOnFailureListener {
                         initOnFailureListener(getString(R.string.remove_error), it)
                     }
-                    stopSelf()
                 }
             }
         }
-        return super.onStartCommand(intent, flags, startId)
     }
 
     @SuppressLint("MissingPermission")
@@ -98,6 +93,7 @@ class GeofenceService : Service() {
         setCircularRegion(latitude, longitude, radius)
         setExpirationDuration(Geofence.NEVER_EXPIRE)
         setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+        setNotificationResponsiveness(FIVE_MINUTES_IN_MILLIS)
     }.build()
 
     private fun getGeofenceRequest(geofence: Geofence): GeofencingRequest {
@@ -107,42 +103,9 @@ class GeofenceService : Service() {
         }.build()
     }
 
-    private fun createForegroundNotification(
-        title: String,
-        content: String,
-        channelId: String
-    ): Notification {
-        val intent = Intent(this, MainActivity::class.java)
-        val pIntent = PendingIntent.getActivity(this, 3, intent, PendingIntent.FLAG_UPDATE_CURRENT)
-        return NotificationCompat.Builder(this, channelId).apply {
-            setContentTitle(title)
-            setContentText(content)
-            addAction(R.drawable.ic_location_on_black_24dp, getString(R.string.to_the_app_reply), pIntent)
-            setSmallIcon(R.drawable.ic_location_on_black_24dp)
-            priority = NotificationCompat.PRIORITY_DEFAULT
-        }.build()
-    }
-
-
-    private fun createNotificationChannel(channelId: String) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(
-            NotificationChannel(
-                channelId,
-                getString(R.string.channel_name),
-                NotificationManager.IMPORTANCE_DEFAULT
-            ).apply {
-                description = getString(R.string.channel_description)
-            })
-    }
-
     private companion object {
         private const val TAG = "GEOFENCE SERVICE"
-
-
-        private const val FOREGROUND_CHANNEL = "FOREGROUND_CHANNEL"
-        private const val FOREGROUND_ID = 2
+        private const val FIVE_MINUTES_IN_MILLIS = 300000
 
         private const val TEMP_ID = "TEST_GEOFENCE"
         private const val GEOFENCE_RADIUS = 100f
@@ -154,5 +117,4 @@ class GeofenceService : Service() {
         private const val ADD_ACTION = "ADD_ACTION"
         private const val REMOVE_ACTION = "REMOVE_ACTION"
     }
-
 }
