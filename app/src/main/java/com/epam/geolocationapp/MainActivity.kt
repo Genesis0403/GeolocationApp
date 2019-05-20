@@ -3,7 +3,9 @@ package com.epam.geolocationapp
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
@@ -12,6 +14,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import kotlinx.android.synthetic.main.activity_main.*
+import java.lang.IllegalStateException
 
 /**
  * Main Activity which contains [LocationFragment] and [R.id.map].
@@ -29,17 +32,10 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback, LocationFragment.On
         setContentView(R.layout.activity_main)
 
         checkForPermission()
-
-        supportFragmentManager.beginTransaction().apply {
-            add(R.id.locationFragmentContainer, LocationFragment.newInstance())
-            commit()
-        }
-
-        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
-        mapFragment?.getMapAsync(this)
     }
 
     private fun checkForPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED
         ) {
@@ -49,6 +45,34 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback, LocationFragment.On
                 LOCATION_PERMISSION
             )
         }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        when (requestCode) {
+            LOCATION_PERMISSION -> {
+                if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "App requires location permission", Toast.LENGTH_SHORT).show()
+                    throw IllegalStateException("App requires location permission")
+                } else {
+                    loadMapAndControls()
+                }
+            }
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+    }
+
+    private fun loadMapAndControls() {
+        supportFragmentManager.beginTransaction().apply {
+            add(R.id.locationFragmentContainer, LocationFragment.newInstance())
+            commit()
+        }
+
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as? SupportMapFragment
+        mapFragment?.getMapAsync(this)
     }
 
     @SuppressLint("MissingPermission")
