@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.EditText
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.LocationServices
@@ -49,10 +50,14 @@ class LocationFragment : Fragment() {
             Log.d(TAG, "CONFIRMING")
             val latitudeEdit = view.findViewById<EditText>(R.id.latitudeEditText)
             val longitudeEdit = view.findViewById<EditText>(R.id.longitudeEditText)
-            val latitude = latitudeEdit.text.toString().toDouble()
-            val longitude = longitudeEdit.text.toString().toDouble()
+            val latitude = latitudeEdit.text.toString()
+            val longitude = longitudeEdit.text.toString()
 
-            initAcceptClickListener(latitude, longitude, GEOFENCE_RADIUS.toDouble())
+            if (latitude!= EMPTY_STRING && longitude != EMPTY_STRING) {
+                initAcceptClickListener(latitude.toDouble(), longitude.toDouble(), GEOFENCE_RADIUS.toDouble())
+            } else {
+                Toast.makeText(context, getString(R.string.empty_edits_error), Toast.LENGTH_LONG).show()
+            }
         }
 
         val cancelFab = view.findViewById<FloatingActionButton>(R.id.cancelButton)
@@ -96,6 +101,7 @@ class LocationFragment : Fragment() {
         private const val RADIUS_EXTRA = "RADIUS_EXTRA"
         private const val ADD_ACTION = "ADD_ACTION"
         private const val REMOVE_ACTION = "REMOVE_ACTION"
+        private const val EMPTY_STRING = ""
 
         private const val GEOFENCE_RADIUS = 100f
 
